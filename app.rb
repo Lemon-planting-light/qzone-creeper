@@ -24,22 +24,30 @@ shuoshuo_lib.each do |shuoshuo|
     need_str << shuoshuo['content']
     shuoshuo['rt_con'] and need_str << "\n[quote]\n #{shuoshuo['rt_con']['content']} \n[/quote]\n"
     shuoshuo['pic'] and shuoshuo['pic'].each do |pic| 
-        need_str << "\n!()[#{pic['smallurl']}]\n"
+        need_str << "\n![](#{pic['smallurl']})\n"
     end
     puts need_str
     puts "-----------"
     
-    total = 0
+    total_try = 0
     begin
-        @client.create_post({
-            topic_id: @client_config["main_topic_id"],
-            raw: need_str,
-            created_at: shuoshuo["created_time"]
-        })
-        
-    rescue 
-        total = total + 1
-        if total > 3
+        if shuoshuo["created_time"]
+            @client.create_post({
+                topic_id: @client_config["main_topic_id"],
+                raw: need_str,
+                created_at: Time.at(shuoshuo["created_time"]).to_s
+            })
+        else
+            make_post(need_str)
+        end
+    rescue Exception => e  
+        puts "Failed: "
+        puts e.message  
+        puts e.backtrace.inspect 
+        puts "-----------"
+
+        total_try = total_try + 1
+        if total_try > 3
             puts "失败"
         else
             puts "wait 5 sec again..."
@@ -48,7 +56,11 @@ shuoshuo_lib.each do |shuoshuo|
         end
     end
     
+    puts "sleep #{@client_config["wait_sec"]} sec for next..."
     
 
-    sleep(2)
+    sleep(@client_config["wait_sec"])
 end
+
+
+puts "OK."
