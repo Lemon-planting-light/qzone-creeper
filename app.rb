@@ -37,6 +37,10 @@ shuoshuo_lib.each do |shuoshuo|
         puts "上传图片中……请等待2秒以上传下一个"
         sleep(2)
     end
+
+    shuoshuo.gsub("[em]", "**")
+    shuoshuo.gsub("[/em]", "**")
+    
     puts "-----------"
     puts "帖子内容构建完毕"
     puts need_str

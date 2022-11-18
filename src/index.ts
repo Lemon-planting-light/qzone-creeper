@@ -147,8 +147,8 @@ if (debugMode) {
 }
 // 爬取好友的最新说说，与本地数据库进行比对，如果有新说说则写入本地数据库
 async function main() {
+    let pos = 0, newArray = [];
     try {
-        let pos = 0, newArray = [];
         while (true) {
             // 获取好友空间说说的json文件
             console.log(`正在爬取第 ${pos} 到第 ${pos + singleNum} 条说说...`);
@@ -174,17 +174,48 @@ async function main() {
                 if (!historyJson[currentShuoshuoId]) {
                     const current: { [k: string]: any } = shuoshuoList[i];
                     // 如果说说content字数超过400字，则可能被截断，需要重新获取完整的content
-                    if (current.content.length > 400) {
-                        console.log(`正在获取说说 ${currentShuoshuoId} 的完整内容...`);
-                        const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.tid)).content;
-                        current.content = content;
+                    for (let resume_time = 0; resume_time < 3;) {
+                        try {
+                            if (current.content.length > 400) {
+                                console.log(`正在获取说说 ${currentShuoshuoId} 的完整内容...`);
+                                const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.tid)).content;
+                                current.content = content;
+                            }
+                            break;
+                        } catch (e) {
+                            console.log(`捕获到异常信息(´。＿。｀)：${e}`);
+                            console.log('============================');
+                            console.error(e);
+                            console.log('============================');
+                            console.log(`已尝试过 ${resume_time} 次，2秒后尝试重试……`);
+                            
+                            const a = Number(new Date());
+                            while ((Number(new Date()) - a) < 2000);
+                        }
                     }
+                    
+                    
                     // 引用的说说同理
-                    if (current.rt_con && current.rt_con.content.length > 400) {
-                        console.log(`正在获取说说 ${currentShuoshuoId} 的完整引用内容...`);
-                        const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.rt_tid)).content;
-                        current.rt_con.content = content;
+                    for (let resume_time = 0; resume_time < 3;) {
+                        try {
+                            if (current.rt_con && current.rt_con.content.length > 400) {
+                                console.log(`正在获取说说 ${currentShuoshuoId} 的完整引用内容...`);
+                                const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.rt_tid)).content;
+                                current.rt_con.content = content;
+                            }
+                            break;
+                        } catch (e) {
+                            console.log(`捕获到异常信息(´。＿。｀)：${e}`);
+                            console.log('============================');
+                            console.error(e);
+                            console.log('============================');
+                            console.log(`已尝试过 ${resume_time} 次，2秒后尝试重试……`);
+                            
+                            const a = Number(new Date());
+                            while ((Number(new Date()) - a) < 2000);
+                        }
                     }
+                    
                     // 如果设置了自动下载图片
                     if (autoDownloadPic) {
                         // 获取图片列表
@@ -193,16 +224,32 @@ async function main() {
                             console.log(`正在下载说说 ${currentShuoshuoId} 的图片...共 ${current.pic.length} 张`);
                             // 遍历图片列表
                             for (let j = 0; j < picList.length; j++) {
-                                // 获取图片的url
-                                const picUrl = picList[j].url1 ?? picList[j].url2 ?? picList[j].url3 ?? picList[j].pic_id;
-                                // 获取图片的文件名
-                                const picName = `${currentShuoshuoId}-${j}.jpg`;
-                                // 下载图片
-                                await downloadFile(picUrl, picDir, picName);
-                                // 将图片的url替换为本地路径
-                                picList[j] = {
-                                    oriUrl: picUrl,
-                                    localPath: `${picDir}/${picName}`
+                                console.log(`这是第 ${j} 张`);
+                                // 错误处理
+                                for (let resume_time = 0; resume_time < 3;) {
+                                    try {
+                                        // 获取图片的url
+                                        const picUrl = picList[j].url1 ?? picList[j].url2 ?? picList[j].url3 ?? picList[j].pic_id;
+                                        // 获取图片的文件名
+                                        const picName = `${currentShuoshuoId}-${j}.jpg`;
+                                        // 下载图片
+                                        await downloadFile(picUrl, picDir, picName);
+                                        // 将图片的url替换为本地路径
+                                        picList[j] = {
+                                            oriUrl: picUrl,
+                                            localPath: `${picDir}/${picName}`
+                                        }
+                                        break;
+                                    } catch (e) {
+                                        console.log(`捕获到异常信息(´。＿。｀)：${e}`);
+                                        console.log('============================');
+                                        console.error(e);
+                                        console.log('============================');
+                                        console.log(`已尝试过 ${resume_time} 次，2秒后尝试重试……`);
+                                        
+                                        const a = Number(new Date());
+                                        while ((Number(new Date()) - a) < 2000);
+                                    }
                                 }
                             }
                         }
@@ -225,27 +272,41 @@ async function main() {
                 break;
             }
         }
-        // 新说说数组排序
-        newArray.sort((a, b) => a.created_time - b.created_time);
-        if (debugMode) {
-            console.log('newArray', newArray);
-        }
-        // 将本地数据库写入本地
-        writeJson('./lib/data.json', historyJson);
-        writeJson('./lib/new.json', newArray);
-
-        // 写入YML
-        writeYml('./lib/new.yml', newArray);
-
-        console.log(`爬取完毕，共爬取${newArray.length}条新说说~🥰`);
-        console.log(`已更新到./lib/data.json~`);
-        console.log(`新说说已更新到./lib/new.json~`);
-        console.log(`新说说已更新到./lib/new.yml~`);
+        
     } catch (e) {
-        console.log(`捕获到异常信息(´。＿。｀)：${e}`);
+        console.log(`捕获到致命错误(っ °Д °;)：${e}`);
         console.log('============================');
         console.error(e);
         console.log('============================');
+
+        // 备份一遍过去的json
+        const nowdate = new Date();
+        writeJson(`./lib/data-${nowdate.toDateString()}-backup.json`, readJson('./lib/data.json'))
+        console.log(`已备份./lib/data.json到./lib/data-${nowdate.toDateString()}-backup.json~( •̀ ω •́ )y`);
+        writeJson(`./lib/new-${nowdate.toDateString()}-backup.json`, readJson('./lib/new.json'))
+        console.log(`已备份./lib/new.json到./lib/new-${nowdate.toDateString()}-backup.jsom~( •̀ ω •́ )y`);
+        writeYml(`./lib/new-${nowdate.toDateString()}-backup.yml`, readJson('./lib/new.json'));
+        console.log(`已备份./lib/new.yml到./lib/new-${nowdate.toDateString()}-backup.yml~( •̀ ω •́ )y`);
+
     }
+    // 顶级catch
+    // 无论如何，把这次爬下来的写上库里
+    // 新说说数组排序
+    
+    newArray.sort((a, b) => a.created_time - b.created_time);
+    if (debugMode) {
+        console.log('newArray', newArray);
+    }
+    // 将本地数据库写入本地
+    writeJson('./lib/data.json', historyJson);
+    writeJson('./lib/new.json', newArray);
+
+    // 写入YML
+    writeYml('./lib/new.yml', newArray);
+
+    console.log(`爬取完毕，共爬取${newArray.length}条新说说~🥰`);
+    console.log(`已更新到./lib/data.json~`);
+    console.log(`新说说已更新到./lib/new.json~`);
+    console.log(`新说说已更新到./lib/new.yml~`);
 }
 main();
