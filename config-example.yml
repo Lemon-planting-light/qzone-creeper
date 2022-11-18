@@ -1,7 +1,8 @@
-website_url: "http://example.com"
+website_url: "http://172.17.166.115"
 api_key: "b82b104597eb26d1f1b40a80e13eff61ef861b7f462afcfa8de775c6e283f931"
 api_username: "system"
 
-main_topic_id: 965
+main_topic_id: 965 # 发帖到哪个话题（id）
 
-wait_sec: 2
+wait_sec: 2 # 每次上传后的等待时间
+retry_sec: 10 # 每次失败后的重试等待时间

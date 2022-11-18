@@ -43,8 +43,8 @@ def upload_pic(pic_path)
             }
             sleep(1)
         else
-            puts "等待5秒后重试..."
-            sleep(5)
+            puts "等待#{@client_config['retry_sec']}秒后重试..."
+            sleep(@client_config['retry_sec'])
             retry
         end
     end
@@ -77,8 +77,8 @@ shuoshuo_lib.each do |shuoshuo|
         if pic['localPath'] 
             puts "上传图片#{pic_count}中……"
             picurl = upload_pic(pic['localPath'])
-            puts "上传成功，获得url: #{picurl} 等待2秒以进行下次上传"
-            sleep(2)
+            puts "上传成功，获得url: #{picurl} 等待#{@client_config['wait_sec']}秒以进行下次上传"
+            sleep(@client_config['wait_sec'])
         end
         # 未下载到本地
         if !picurl
@@ -125,8 +125,8 @@ shuoshuo_lib.each do |shuoshuo|
             }
             sleep(1)
         else
-            puts "等待5秒后重试..."
-            sleep(5)
+            puts "等待#{@client_config['retry_sec']}秒后重试..."
+            sleep(@client_config['retry_sec'])
             retry
         end
     end
