@@ -20,6 +20,7 @@ def make_post(raw_str)
     })
 end
 
+# 上传图片到discourse，返回一个discourse内部的图片url
 def upload_pic(pic_path)
     f = {}
     total_try = 0
@@ -65,7 +66,7 @@ shuoshuo_lib.each do |shuoshuo|
     need_str << shuoshuo['content']
     # 添加引用（转发说说）信息
     shuoshuo['rt_con'] and need_str << "\n[quote=#{@client_config['api_username']}]\n #{shuoshuo['rt_con']['content']} \n[/quote]\n"
-    
+    # 在终端里进行一个简要的解释说明
     puts "已获得说说【#{need_str[0..10]}...】的主体："
     puts "----------"
     # 进行一个图片的上传
@@ -75,7 +76,7 @@ shuoshuo_lib.each do |shuoshuo|
         picurl = nil
         # 已下载到本地
         if pic['localPath'] 
-            puts "上传图片#{pic_count}中……"
+            puts "上传图片#{pic_count} of #{shuoshuo['pic'].length} 中……"
             picurl = upload_pic(pic['localPath'])
             puts "上传成功，获得url: #{picurl} 等待#{@client_config['wait_sec']}秒以进行下次上传"
             sleep(@client_config['wait_sec'])
