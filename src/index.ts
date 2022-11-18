@@ -11,7 +11,7 @@ let cookie = '';
 // 单次爬取数量
 let singleNum = 20;
 // 爬取数量上限
-let limitCount = 40;
+let limitCount = 100;
 // 调试模式
 let debugMode = false;
 // 每条说说要保留的信息
@@ -50,6 +50,17 @@ async function getShuoshuo(qq: string, g_tk: number, cookie: string, pos: number
     const data = res.data.substring(17, res.data.length - 2);
     return JSON.parse(data);
 }
+// 获取指定tid说说的content
+async function getShuoshuoInfo(qq: string, g_tk: number, cookie: string, tid: string) {
+    const url = `https://user.qzone.qq.com/proxy/domain/taotao.qq.com/cgi-bin/emotion_cgi_msgdetail_v6?uin=${qq}&tid=${tid}&ftype=0&sort=0&pos=0&num=20&replynum=100&g_tk=${g_tk}&callback=_preloadCallback&code_version=1&format=jsonp&need_private_comment=1&not_trunc_con=1`;
+    const res = await axios.get<string>(url, {
+        headers: {
+            cookie,
+        },
+    });
+    const data = res.data.substring(17, res.data.length - 2);
+    return JSON.parse(data);
+}
 // 读取本地json
 function readJson(path: string) {
     const fs = require('fs');
@@ -68,7 +79,7 @@ function writeJson(path: string, data: any) {
  */
 
 // 获取本地存储的json文件（历史说说数据库）
-let historyJson;
+let historyJson: any;
 try {
     historyJson = readJson('./lib/data.json');
 } catch (e) { }
@@ -77,7 +88,7 @@ if (!historyJson) {
     console.log('不存在历史说说数据库(´。＿。｀)');
 }
 // 获取配置文件（config.json）
-let configJson;
+let configJson: any;
 try {
     configJson = readJson('./lib/config.json');
 } catch (e) { }
@@ -87,7 +98,7 @@ if (configJson) {
     singleNum = configJson.singleNum;
     limitCount = configJson.limitCount;
 } else {
-    console.log('不存在config.json(´。＿。｀)');
+    console.log('不存在config.json(´。＿。｀)，将使用默认配置...');
 }
 // 将cookie转换为对象
 const cookieObject = cookieToObject(cookie);
@@ -102,7 +113,7 @@ if (debugMode) {
     console.log('g_tk', g_tk);
 }
 // 爬取好友的最新说说，与本地数据库进行比对，如果有新说说则写入本地数据库
-(async function main() {
+async function main() {
     try {
         let pos = 0, flag = true, newArray = [];
         while (flag) {
@@ -125,10 +136,22 @@ if (debugMode) {
                 // 如果当前说说的id不在本地数据库中，则将当前说说写入本地数据库
                 if (!historyJson[currentShuoshuoId]) {
                     const current: { [k: string]: any } = shuoshuoList[i];
+                    // 如果说说content字数超过400字，则可能被截断，需要重新获取完整的content
+                    if (current.content.length > 400) { 
+                        console.log(`正在获取说说 ${currentShuoshuoId} 的完整内容...`);
+                        const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.tid)).content;
+                        current.content = content;
+                    }
+                    // 引用的说说同理
+                    if (current.rt_con && current.rt_con.content.length > 400) { 
+                        console.log(`正在获取说说 ${currentShuoshuoId} 的完整引用内容...`);
+                        const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.rt_tid)).content;
+                        current.rt_con.content = content;
+                    }
                     // 精简
                     let shortVer: { [k: string]: any } = {};
                     for (let key of keepInfo) {
-                        if (current[key]) { 
+                        if (current[key]) {
                             shortVer[key] = current[key];
                         }
                     }
@@ -161,4 +184,5 @@ if (debugMode) {
     } catch (e) {
         console.log(`捕获到异常信息(´。＿。｀)：${e}`);
     }
-})();
+}
+main();
