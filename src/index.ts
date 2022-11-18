@@ -1,5 +1,5 @@
 import axios from "axios";
-import yaml from "js-yaml"
+import yaml from "js-yaml";
 
 /**
  * =====配置区=======
@@ -17,6 +17,10 @@ let limitCount = 100;
 let debugMode = false;
 // 每条说说要保留的信息
 let keepInfo = ['content', 'created_time', 'createTime', 'rt_con', 'name', 'pic', 'tid'];
+// 是否自动下载图片
+let autoDownloadPic = true;
+// 图片下载目录
+let picDir = './pic';
 
 /**
  * =====函数区=======
@@ -78,6 +82,25 @@ function writeYml(path: string, data: any) {
     const fs = require('fs');
     fs.writeFileSync(path, yaml.dump(data));
 }
+// 下载文件到指定目录
+async function downloadFile(url: string, path: string, fileName: string) {
+    const fs = require('fs');
+    // 先判断目录是否存在，不存在则创建
+    if (!fs.existsSync(path)) {
+        fs.mkdirSync(path);
+    }
+    const writer = fs.createWriteStream(path + '/' + fileName);
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream',
+    });
+    response.data.pipe(writer);
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
 
 
 /**
@@ -99,10 +122,14 @@ try {
     configJson = readJson('./lib/config.json');
 } catch (e) { }
 if (configJson) {
-    targetQQ = configJson.targetQQ;
-    cookie = configJson.cookie;
-    singleNum = configJson.singleNum;
-    limitCount = configJson.limitCount;
+    targetQQ = configJson.targetQQ ?? targetQQ;
+    cookie = configJson.cookie ?? cookie;
+    singleNum = configJson.singleNum ?? singleNum;
+    limitCount = configJson.limitCount ?? limitCount;
+    debugMode = configJson.debugMode ?? debugMode;
+    keepInfo = configJson.keepInfo ?? keepInfo;
+    autoDownloadPic = configJson.autoDownloadPic ?? autoDownloadPic;
+    picDir = configJson.picDir ?? picDir;
 } else {
     console.log('不存在config.json(´。＿。｀)，将使用默认配置...');
 }
@@ -121,8 +148,8 @@ if (debugMode) {
 // 爬取好友的最新说说，与本地数据库进行比对，如果有新说说则写入本地数据库
 async function main() {
     try {
-        let pos = 0, flag = true, newArray = [];
-        while (flag) {
+        let pos = 0, newArray = [];
+        while (true) {
             // 获取好友空间说说的json文件
             console.log(`正在爬取第 ${pos} 到第 ${pos + singleNum} 条说说...`);
             const data = await getShuoshuo(targetQQ, g_tk, cookie, pos, singleNum);
@@ -132,7 +159,11 @@ async function main() {
             // 获取好友空间说说的json文件中的说说列表
             const shuoshuoList = data.msglist;
             if (!shuoshuoList) {
-                console.log('好友空间没有对我开放...呜呜呜');
+                if (data.code === -3000) {
+                    console.log('cookie已失效，请重新获取cookie(´。＿。｀)');
+                } else {
+                    console.log('好友空间没有对我开放...呜呜呜');
+                }
                 return;
             }
             // 遍历说说列表
@@ -143,16 +174,38 @@ async function main() {
                 if (!historyJson[currentShuoshuoId]) {
                     const current: { [k: string]: any } = shuoshuoList[i];
                     // 如果说说content字数超过400字，则可能被截断，需要重新获取完整的content
-                    if (current.content.length > 400) { 
+                    if (current.content.length > 400) {
                         console.log(`正在获取说说 ${currentShuoshuoId} 的完整内容...`);
                         const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.tid)).content;
                         current.content = content;
                     }
                     // 引用的说说同理
-                    if (current.rt_con && current.rt_con.content.length > 400) { 
+                    if (current.rt_con && current.rt_con.content.length > 400) {
                         console.log(`正在获取说说 ${currentShuoshuoId} 的完整引用内容...`);
                         const content = (await getShuoshuoInfo(targetQQ, g_tk, cookie, current.rt_tid)).content;
                         current.rt_con.content = content;
+                    }
+                    // 如果设置了自动下载图片
+                    if (autoDownloadPic) {
+                        // 获取图片列表
+                        const picList = current.pic;
+                        if (picList) {
+                            console.log(`正在下载说说 ${currentShuoshuoId} 的图片...共 ${current.pic.length} 张`);
+                            // 遍历图片列表
+                            for (let j = 0; j < picList.length; j++) {
+                                // 获取图片的url
+                                const picUrl = picList[j].url1 ?? picList[j].url2 ?? picList[j].url3 ?? picList[j].pic_id;
+                                // 获取图片的文件名
+                                const picName = `${currentShuoshuoId}-${j}.jpg`;
+                                // 下载图片
+                                await downloadFile(picUrl, picDir, picName);
+                                // 将图片的url替换为本地路径
+                                picList[j] = {
+                                    oriUrl: picUrl,
+                                    localPath: `${picDir}/${picName}`
+                                }
+                            }
+                        }
                     }
                     // 精简
                     let shortVer: { [k: string]: any } = {};
@@ -163,10 +216,6 @@ async function main() {
                     }
                     historyJson[currentShuoshuoId] = shortVer;
                     newArray.push(shortVer);
-                } else {
-                    // 如果当前说说的id在本地数据库中，则说明已经爬取过了，跳出循环
-                    flag = false;
-                    break;
                 }
             }
             // pos递增
@@ -193,6 +242,9 @@ async function main() {
         console.log(`新说说已更新到./lib/new.json~`);
     } catch (e) {
         console.log(`捕获到异常信息(´。＿。｀)：${e}`);
+        console.log('============================');
+        console.error(e);
+        console.log('============================');
     }
 }
 main();
