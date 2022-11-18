@@ -17,15 +17,28 @@ def make_post(raw_str)
     })
 end
 
+def upload_pic(pic_path)
+    f = @client.upload_file({
+        file: Faraday::UploadIO.new(pic_path, "application/jpg")
+    })
+    return f["short_url"]
+end
+
+# 加载说说库
 shuoshuo_lib = YAML.load(File.open("./lib/new.yml"))
 
+# 对每条说说进行处理
 shuoshuo_lib.each do |shuoshuo|
     need_str = ''
     need_str << shuoshuo['content']
     shuoshuo['rt_con'] and need_str << "\n[quote]\n #{shuoshuo['rt_con']['content']} \n[/quote]\n"
     shuoshuo['pic'] and shuoshuo['pic'].each do |pic| 
         need_str << "\n![](#{pic['smallurl']})\n"
+        puts "上传图片中……请等待2秒以上传下一个"
+        sleep(2)
     end
+    puts "-----------"
+    puts "帖子内容构建完毕"
     puts need_str
     puts "-----------"
     
@@ -50,7 +63,7 @@ shuoshuo_lib.each do |shuoshuo|
         if total_try > 3
             puts "失败"
         else
-            puts "wait 5 sec again..."
+            puts "wait 5 sec and retry..."
             sleep(5)
             retry
         end
