@@ -240,6 +240,7 @@ async function main() {
         console.log(`爬取完毕，共爬取${newArray.length}条新说说~🥰`);
         console.log(`已更新到./lib/data.json~`);
         console.log(`新说说已更新到./lib/new.json~`);
+        console.log(`新说说已更新到./lib/new.yml~`);
     } catch (e) {
         console.log(`捕获到异常信息(´。＿。｀)：${e}`);
         console.log('============================');
