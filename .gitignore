@@ -1,8 +1,8 @@
 /node_modules/
 /dist/
-/lib/config.json
 /lib/data.json
 /lib/new.json
 /lib/test.json
 config.*
 /lib/*.yml
+/pic/
