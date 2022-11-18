@@ -1,0 +1,8 @@
+{
+    "targetQQ": "",
+    "cookie": "",
+    "singleNum": 20,
+    "limitCount": 100,
+    "debugMode": false,
+    "keepInfo":["content", "created_time", "createTime", "rt_con", "name", "pic", "tid"]
+}
