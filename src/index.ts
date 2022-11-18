@@ -1,4 +1,5 @@
 import axios from "axios";
+import yaml from "js-yaml"
 
 /**
  * =====配置区=======
@@ -71,6 +72,11 @@ function readJson(path: string) {
 function writeJson(path: string, data: any) {
     const fs = require('fs');
     fs.writeFileSync(path, JSON.stringify(data));
+}
+// 写入yml
+function writeYml(path: string, data: any) {
+    const fs = require('fs');
+    fs.writeFileSync(path, yaml.dump(data));
 }
 
 
@@ -178,6 +184,10 @@ async function main() {
         // 将本地数据库写入本地
         writeJson('./lib/data.json', historyJson);
         writeJson('./lib/new.json', newArray);
+
+        // 写入YML
+        writeYml('./lib/new.yml', newArray);
+
         console.log(`爬取完毕，共爬取${newArray.length}条新说说~🥰`);
         console.log(`已更新到./lib/data.json~`);
         console.log(`新说说已更新到./lib/new.json~`);

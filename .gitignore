@@ -4,3 +4,5 @@
 /lib/data.json
 /lib/new.json
 /lib/test.json
+config.*
+/lib/*.yml
