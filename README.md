@@ -4,6 +4,12 @@
 
 ## 使用
 
+安装所需依赖
+```
+npm install
+gem install discourse_api
+```
+
 配置好 `config.yml` 和 `lib/config.json`
 
 按顺序执行
@@ -12,6 +18,10 @@
 npm run build
 npm run run
 ruby app.rb
+```
+或者
+```
+./run.sh
 ```
 
 即可。

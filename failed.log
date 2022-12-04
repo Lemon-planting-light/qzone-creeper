@@ -1,0 +1,13 @@
+---
+- :classname: post
+  :info: '{"action"=>"create_post", "errors"=>["正文 太类似于您最近发表的内容"]}'
+  :inspect: '["/var/lib/gems/3.0.0/gems/discourse_api-1.1.0/lib/discourse_api/client.rb:182:in
+    `handle_error''", "/var/lib/gems/3.0.0/gems/discourse_api-1.1.0/lib/discourse_api/client.rb:167:in
+    `request''", "/var/lib/gems/3.0.0/gems/discourse_api-1.1.0/lib/discourse_api/client.rb:101:in
+    `post''", "/var/lib/gems/3.0.0/gems/discourse_api-1.1.0/lib/discourse_api/api/posts.rb:9:in
+    `create_post''", "app.rb:102:in `block in <main>''", "app.rb:63:in `each''", "app.rb:63:in
+    `<main>''"]'
+  :created_at: '2022-12-03 11:46:21 +0800'
+  :details: "截至目前，三大平台（tb、jd、pdd）基本上已经全部阵亡，但仍需要时间观察。为了应急方案能够准确高效开展，现征集大家丧失购买药物渠道的情况。请已丧失购买渠道的跨女伙伴将自己常用药物及剂量私聊发送给bot，附带药物剩余存量、成年与否、家长同意情况。bot将对大家的需求和信息进行汇总，希望能在初期优先帮助到一些情况危急的伙伴。\n[quote=Trans_Bot]\n
+    【bot关于跨性别女性购买药物的一些情况描述与请求】\n伙伴们，中午好。\n今天是12月2日，《药品网络销售禁止清单》（第一版）正式施行的第二天。\n从各大电商平台的情况来看，情况变幻莫测，不容乐观。以某平台的具体情况为例，由于事先更改了用户协议和声明，在颁布《清单》当天的0点并未受到任何影响。但，在接下来的24小时内相继出现了货品隐藏或下架的情况。截至今天上午，情况更加恶化。\n可见，虽然新政策的实施并不是上行下效的，但“上有政策，下有对策”的思路也没能很好的实现。\n因此，由于个人运营的局限性，bot向伙伴们发出如下请求：\n1.尽可能多地汇报各大电商平台的药物情况\n2.尽可能多地汇报各药商的经营情况\n3.以上情况包括其每天变化的情况\n以上请求截至12月9日。bot将通过大家汇报的情况综合判断有关购买药物的真实情况和动向，并决定是否需要启用一定的应急措施来进行应对。\n
+    \n[/quote]\n"

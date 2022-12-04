@@ -63,7 +63,7 @@ end
 shuoshuo_lib.each do |shuoshuo|
     need_str = ''
     # 传入说说主要内容
-    need_str << shuoshuo['content']
+    need_str << (shuoshuo['content'] or '（无文字说明）')
     # 添加引用（转发说说）信息
     shuoshuo['rt_con'] and need_str << "\n[quote=#{@client_config['api_username']}]\n #{shuoshuo['rt_con']['content']} \n[/quote]\n"
     # 在终端里进行一个简要的解释说明
